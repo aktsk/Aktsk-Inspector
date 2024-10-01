@@ -89,7 +89,7 @@ namespace TriInspector.Elements
                 #region カスタマイズ: 描画範囲調整
 
                 // xMin = headerRect.xMin + EditorGUIUtility.labelWidth,
-                xMin = headerRect.xMin + EditorGUIUtility.labelWidth + 2,
+                xMin = headerRect.xMin + 15,
 
                 #endregion
             };
