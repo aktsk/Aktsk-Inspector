@@ -24,5 +24,11 @@ namespace TriInspector
         public bool Table { get; set; }
 
         #endregion
+
+        #region カスタマイズ: 交互の背景色
+
+        public bool AlternatingRowBackgrounds { get; set; }
+
+        #endregion
     }
 }

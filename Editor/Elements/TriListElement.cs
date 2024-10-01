@@ -30,6 +30,12 @@ namespace TriInspector.Elements
 
         #endregion
 
+        #region カスタマイズ: 交互の背景色
+
+        private readonly bool _alternatingRowBackgrounds;
+
+        #endregion
+
         private float _lastContentWidth;
 
         protected ReorderableList ListGui => _reorderableListGui;
@@ -58,11 +64,24 @@ namespace TriInspector.Elements
 
             #endregion
 
+            #region カスタマイズ: 交互の背景色
+
+            _alternatingRowBackgrounds = settings?.AlternatingRowBackgrounds ?? false;
+
+            #endregion
+
             _reorderableListGui = new ReorderableList(null, _property.ArrayElementType)
             {
                 draggable = settings?.Draggable ?? true,
                 displayAdd = settings == null || !settings.HideAddButton,
                 displayRemove = settings == null || !settings.HideRemoveButton,
+
+                #region カスタマイズ: 交互の背景色
+
+                drawElementBackgroundCallback = DrawElementBackgroundCallback,
+
+                #endregion
+
                 drawHeaderCallback = DrawHeaderCallback,
                 elementHeightCallback = ElementHeightCallback,
                 drawElementCallback = DrawElementCallback,
@@ -338,6 +357,21 @@ namespace TriInspector.Elements
                 forceInline = !_showElementLabels,
             });
         }
+
+        #region カスタマイズ: 交互の背景色
+
+        private void DrawElementBackgroundCallback(Rect rect, int index, bool isActive, bool isFocused)
+        {
+            if (_alternatingRowBackgrounds && index % 2 == 1)
+            {
+                EditorGUI.DrawRect(rect, new Color(0, 0, 0, 0.12f));
+            }
+
+            ReorderableList.defaultBehaviours.DrawElementBackground(
+                rect, index, isActive, isFocused, _reorderableListGui.draggable);
+        }
+
+        #endregion
 
         private void DrawHeaderCallback(Rect rect)
         {
