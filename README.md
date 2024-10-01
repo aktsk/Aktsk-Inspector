@@ -18,9 +18,12 @@ Packages/manifest.json に `"com.codewriter.triinspector": "https://github.com/a
 
 ```manifest.json
 {
+  ...
   "dependencies": {
     "com.codewriter.triinspector": "https://github.com/aktsk/Aktsk-Inspector.git",
     ...
+  },
+  ...
 }
 ```
 
