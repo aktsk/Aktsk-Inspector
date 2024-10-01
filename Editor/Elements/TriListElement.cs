@@ -382,6 +382,12 @@ namespace TriInspector.Elements
                 rect.xMin += DraggableAreaExtraWidth;
             }
 
+            #region カスタマイズ: 上端にスペースを追加
+
+            rect.yMin += 1;
+
+            #endregion
+
             using (TriPropertyOverrideContext.BeginOverride(ListPropertyOverrideContext.Instance))
             {
                 GetChild(index).OnGUI(rect);
