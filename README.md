@@ -6,7 +6,11 @@ MITライセンスで公開されている [Tri Inspector](https://github.com/co
 
 ### Package Manager 経由でのインストール
 
-左上の＋ボタンから「Add package from git URL...」を選択し、「https://github.com/aktsk/Aktsk-Inspector.git」を入力して「Add」
+1. Package Manager を開く
+2. 左上の＋ボタンをクリック
+3. 「Add package from git URL...」をクリック
+4. テキストフィールドに `https://github.com/aktsk/Aktsk-Inspector.git` と入力
+5. 「Add」ボタンをクリック
 
 ### manifest.json 直接編集でのインストール
 
