@@ -23,6 +23,17 @@ namespace TriInspector.Utilities
                 type = type.DeclaringType;
             }
 
+            #region カスタマイズ: Description属性に対応
+
+            var descriptionAttribute = System.Reflection.CustomAttributeExtensions
+                .GetCustomAttribute<System.ComponentModel.DescriptionAttribute>(type);
+            if (descriptionAttribute != null)
+            {
+                niceName += " (" + descriptionAttribute.Description + ")";
+            }
+
+            #endregion
+
             TypeNiceNames[type] = niceName;
 
             return niceName;
