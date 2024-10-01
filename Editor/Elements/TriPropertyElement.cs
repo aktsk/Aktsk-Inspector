@@ -37,6 +37,15 @@ namespace TriInspector.Elements
 
         public override float GetHeight(float width)
         {
+            #region カスタマイズ: TriEditorWindow対応
+
+            if (_property.RawName == "m_SerializedDataModeController")
+            {
+                return 0;
+            }
+
+            #endregion
+
             if (!_property.IsVisible)
             {
                 return -EditorGUIUtility.standardVerticalSpacing;
@@ -47,6 +56,15 @@ namespace TriInspector.Elements
 
         public override void OnGUI(Rect position)
         {
+            #region カスタマイズ: TriEditorWindow対応
+
+            if (_property.RawName == "m_SerializedDataModeController")
+            {
+                return;
+            }
+
+            #endregion
+
             if (!_property.IsVisible)
             {
                 return;
