@@ -121,7 +121,15 @@ namespace TriInspector.Elements
             }
             else
             {
-                TriEditorGUI.Foldout(headerLabelRect, _property);
+                #region カスタマイズ: 描画範囲調整
+
+                var foldOutRect = new Rect(headerLabelRect)
+                {
+                    width = 20,
+                };
+                TriEditorGUI.Foldout(foldOutRect, _property);
+
+                #endregion
 
                 if (_showReferencePicker)
                 {
