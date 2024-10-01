@@ -419,6 +419,49 @@ namespace TriInspector.Elements
 
             #endregion
 
+            #region カスタマイズ: TSVとの相互変換
+
+            if (_table)
+            {
+                var fromTsvButtonRect = new Rect(labelRect)
+                {
+                    xMin = arraySizeRect.xMin - 3 - 36,
+                    xMax = arraySizeRect.xMin - 3,
+                };
+                if (GUI.Button(fromTsvButtonRect, "貼付"))
+                {
+                    if (_property.TryGetSerializedProperty(out var serializedProperty))
+                    {
+                        var tsvText = EditorGUIUtility.systemCopyBuffer;
+                        TriTsvConverterContext.Converter.TsvTextToSerializedProperty(tsvText, serializedProperty);
+                    }
+                    else
+                    {
+                        Debug.LogError("SerializedPropertyの取得に失敗しました");
+                    }
+                }
+
+                var toTsvButtonRect = new Rect(labelRect)
+                {
+                    xMin = fromTsvButtonRect.xMin - 3 - 44,
+                    xMax = fromTsvButtonRect.xMin - 3,
+                };
+                if (GUI.Button(toTsvButtonRect, "コピー"))
+                {
+                    if (_property.TryGetSerializedProperty(out var serializedProperty))
+                    {
+                        var tsvText = TriTsvConverterContext.Converter.SerializePropertyToTsvText(serializedProperty);
+                        EditorGUIUtility.systemCopyBuffer = tsvText;
+                    }
+                    else
+                    {
+                        Debug.LogError("SerializedPropertyの取得に失敗しました");
+                    }
+                }
+            }
+
+            #endregion
+
             if (_alwaysExpanded)
             {
                 EditorGUI.LabelField(labelRect, _property.DisplayNameContent);
