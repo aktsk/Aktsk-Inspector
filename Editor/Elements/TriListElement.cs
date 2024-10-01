@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TriInspector.Resolvers;
 using TriInspectorUnityInternalBridge;
 using TriInspector.Utilities;
@@ -47,10 +48,10 @@ namespace TriInspector.Elements
             _property = property;
             _alwaysExpanded = settings?.AlwaysExpanded ?? false;
 
-            #region カスタマイズ: 要素のラベルを任意に指定可能にする
+            #region カスタマイズ: ToStringメソッドがoverrideされている場合、リスト要素のラベルとして利用する
 
             // _showElementLabels = settings?.ShowElementLabels ?? false;
-            _showElementLabels = true;
+            _showElementLabels = !IsToStringMethodOverridden(property);
 
             #endregion
 
@@ -618,18 +619,19 @@ namespace TriInspector.Elements
 
             #endregion
 
+            var indexRect = new Rect(rect)
+            {
+                x = rect.x - 19,
+                width = 19,
+                yMin = rect.yMin + 3,
+                yMax = rect.yMax - 1,
+            };
+            EditorGUI.LabelField(indexRect, index.ToString(), Styles.ElementIndex);
+
             #region カスタマイズ: テーブル対応
 
             if (_table)
             {
-                var indexRect = new Rect(rect)
-                {
-                    x = rect.x - 19,
-                    width = 19,
-                    yMin = rect.y - 1,
-                };
-                EditorGUI.LabelField(indexRect, index.ToString(), Styles.ElementIndex);
-
                 using (TriPropertyOverrideContext.BeginOverride(_tableListPropertyOverrideContext))
                 {
                     var rowElement = (TableRowElement) (GetChild(index));
@@ -784,10 +786,42 @@ namespace TriInspector.Elements
 
                 #endregion
 
+                #region カスタマイズ: ToStringメソッドがoverrideされている場合、リスト要素のラベルとして利用する
+
+                if (IsToStringMethodOverridden(property) && property.Value != null)
+                {
+                    displayName = new GUIContent(property.Value.ToString());
+                    return true;
+                }
+
+                #endregion
+
                 displayName = _noneLabel;
-                return false;
+                return true;
             }
         }
+
+        #region カスタマイズ: ToStringメソッドがoverrideされている場合、リスト要素のラベルとして利用する
+
+        private static bool IsToStringMethodOverridden(TriProperty property)
+        {
+            var method = property.FieldType.GetMethod("ToString", Type.EmptyTypes);
+
+            if (method == null) return false;
+            if (method.DeclaringType == null) return false;
+            if (method.DeclaringType == method.GetBaseDefinition().DeclaringType) return false;
+
+            // UnityEngine名前空間の型と組み込み型はToStringをオーバーライドしていても無視する
+            if (method.DeclaringType.Namespace == null) return true;
+            var nameSpaceHead = method.DeclaringType.Namespace.Split('.')[0];
+            if (nameSpaceHead == "UnityEngine") return false;
+            if (nameSpaceHead == "UnityEditor") return false;
+            if (nameSpaceHead == "System") return false;
+
+            return true;
+        }
+
+        #endregion
 
         private static class Styles
         {
@@ -816,7 +850,7 @@ namespace TriInspector.Elements
 
                 ElementIndex = new GUIStyle(GUI.skin.label)
                 {
-                    alignment = TextAnchor.MiddleCenter,
+                    alignment = TextAnchor.UpperCenter,
                     fontSize = 9,
                 };
 
