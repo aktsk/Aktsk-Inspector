@@ -38,10 +38,26 @@ namespace TriInspector.Drawers
             public EnumToggleButtonsElement(TriProperty property)
             {
                 _property = property;
-                _enumValues = Enum.GetNames(property.FieldType)
-                    .Zip(Enum.GetValues(property.FieldType).OfType<Enum>(),
-                        (name, value) => new KeyValuePair<string, Enum>(name, value))
+
+                #region カスタマイズ: EnumのInspectorName属性に対応
+
+                // _enumValues = Enum.GetNames(property.FieldType)
+                //     .Zip(Enum.GetValues(property.FieldType).OfType<Enum>(),
+                //         (name, value) => new KeyValuePair<string, Enum>(name, value))
+                //     .ToList();
+
+                _enumValues = Enum.GetValues(property.FieldType).OfType<Enum>()
+                    .Select(value =>
+                    {
+                        var inspectorNameAttr = value.GetType().GetField(value.ToString())
+                            .GetCustomAttribute<InspectorNameAttribute>();
+                        var name = inspectorNameAttr != null ? inspectorNameAttr.displayName : value.ToString();
+                        return new KeyValuePair<string, Enum>(name, value);
+                    })
                     .ToList();
+
+                #endregion
+
                 _isFlags = property.FieldType.GetCustomAttributes(typeof(FlagsAttribute), false).Length > 0;
 
                 _enumValues.Sort(new DeclarationOrderComparer(property.FieldType));

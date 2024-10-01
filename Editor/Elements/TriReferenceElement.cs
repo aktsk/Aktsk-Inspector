@@ -50,7 +50,12 @@ namespace TriInspector.Elements
 
         public override float GetHeight(float width)
         {
-            var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight;
+            #region カスタマイズ: 描画範囲調整
+
+            // var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight;
+            var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight + 2;
+
+            #endregion
 
             if (_props.inline || _property.IsExpanded)
             {
@@ -80,12 +85,27 @@ namespace TriInspector.Elements
             var headerFieldRect = new Rect(position)
             {
                 height = headerRect.height,
-                xMin = headerRect.xMin + EditorGUIUtility.labelWidth,
+
+                #region カスタマイズ: 描画範囲調整
+
+                // xMin = headerRect.xMin + EditorGUIUtility.labelWidth,
+                xMin = headerRect.xMin + 15,
+
+                #endregion
             };
             var contentRect = new Rect(position)
             {
                 yMin = position.yMin + headerRect.height,
             };
+
+            #region カスタマイズ: 描画範囲調整
+
+            if (!_skipReferencePickerExtraLine)
+            {
+                contentRect.yMin += 2;
+            }
+
+            #endregion
 
             if (_props.inline)
             {
@@ -110,6 +130,19 @@ namespace TriInspector.Elements
 
                 if (_property.IsExpanded)
                 {
+                    #region カスタマイズ: 縦線表示
+
+                    var lineRect = new Rect(position)
+                    {
+                        x = position.x + 6,
+                        y = position.y + 13,
+                        height = position.height - 13,
+                        width = 1,
+                    };
+                    EditorGUI.DrawRect(lineRect, new Color(1, 1, 1, 0.1f));
+
+                    #endregion
+
                     using (var indentedRectScope = TriGuiHelper.PushIndentedRect(contentRect, 1))
                     using (TriGuiHelper.PushLabelWidth(_props.labelWidth))
                     {
