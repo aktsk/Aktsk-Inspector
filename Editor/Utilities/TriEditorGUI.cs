@@ -16,7 +16,8 @@ namespace TriInspector.Utilities
 
                 // property.IsExpanded = EditorGUI.Foldout(rect, property.IsExpanded, content, true);
                 EditorGUI.BeginChangeCheck();
-                var expanded = EditorGUI.Foldout(rect, property.IsExpanded, content, true);
+                var style = new GUIStyle(EditorStyles.foldout) {richText = true};
+                var expanded = EditorGUI.Foldout(rect, property.IsExpanded, content, true, style);
                 if (EditorGUI.EndChangeCheck())
                 {
                     property.SetExpanded(expanded, Event.current.alt);
