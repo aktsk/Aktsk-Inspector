@@ -14,14 +14,14 @@ MITライセンスで公開されている [Tri Inspector](https://github.com/co
 
 ### manifest.json 直接編集でのインストール
 
-Packages/manifest.json に `"com.codewriter.triinspector": "https://github.com/aktsk/Aktsk-Inspector.git"` の記述を追加
+Packages/manifest.json に `"com.aktsk.aktskinspector": "https://github.com/aktsk/Aktsk-Inspector.git"` の記述を追加
 
 ```manifest.json
 {
   ...
   "dependencies": {
     ...
-    "com.codewriter.triinspector": "https://github.com/aktsk/Aktsk-Inspector.git",
+    "com.aktsk.aktskinspector": "https://github.com/aktsk/Aktsk-Inspector.git",
     ...
   },
   ...
