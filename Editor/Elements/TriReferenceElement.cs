@@ -50,7 +50,12 @@ namespace TriInspector.Elements
 
         public override float GetHeight(float width)
         {
-            var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight;
+            #region カスタマイズ: 描画範囲調整
+
+            // var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight;
+            var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight + 2;
+
+            #endregion
 
             if (_props.inline || _property.IsExpanded)
             {
@@ -80,12 +85,27 @@ namespace TriInspector.Elements
             var headerFieldRect = new Rect(position)
             {
                 height = headerRect.height,
-                xMin = headerRect.xMin + EditorGUIUtility.labelWidth,
+
+                #region カスタマイズ: 描画範囲調整
+
+                // xMin = headerRect.xMin + EditorGUIUtility.labelWidth,
+                xMin = headerRect.xMin + EditorGUIUtility.labelWidth + 2,
+
+                #endregion
             };
             var contentRect = new Rect(position)
             {
                 yMin = position.yMin + headerRect.height,
             };
+
+            #region カスタマイズ: 描画範囲調整
+
+            if (!_skipReferencePickerExtraLine)
+            {
+                contentRect.yMin += 2;
+            }
+
+            #endregion
 
             if (_props.inline)
             {
