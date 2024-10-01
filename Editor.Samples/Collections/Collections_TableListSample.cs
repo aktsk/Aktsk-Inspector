@@ -21,6 +21,9 @@ public class Collections_TableListSample : ScriptableObject
 
     public List<TableItem> table;
 
+    [ListDrawerSettings(Table = true)]
+    public List<TableItem2> table2;
+
     [Serializable]
     public class TableItem
     {
@@ -41,5 +44,13 @@ public class Collections_TableListSample : ScriptableObject
         public void Test2()
         {
         }
+    }
+
+    [Serializable]
+    public class TableItem2
+    {
+        public bool flag;
+        public string text;
+        public Vector3 vector;
     }
 }
