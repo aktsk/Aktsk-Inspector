@@ -14,11 +14,21 @@ namespace TriInspector.Utilities
                 return niceName;
             }
 
-            niceName = type.Name;
+            #region カスタマイズ: 型名表示でスペースを入れる
+
+            // niceName = type.Name;
+            niceName = UnityEditor.ObjectNames.NicifyVariableName(type.Name);
+
+            #endregion
 
             while (type.DeclaringType != null)
             {
-                niceName = type.DeclaringType.Name + "." + niceName;
+                #region カスタマイズ: 型名表示でスペースを入れる
+
+                // niceName = type.DeclaringType.Name + "." + niceName;
+                niceName = UnityEditor.ObjectNames.NicifyVariableName(type.DeclaringType.Name) + "." + niceName;
+
+                #endregion
 
                 type = type.DeclaringType;
             }
