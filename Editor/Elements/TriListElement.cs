@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using TriInspector.Resolvers;
 using TriInspectorUnityInternalBridge;
 using TriInspector.Utilities;
 using UnityEditor;
@@ -30,7 +31,14 @@ namespace TriInspector.Elements
 
             _property = property;
             _alwaysExpanded = settings?.AlwaysExpanded ?? false;
-            _showElementLabels = settings?.ShowElementLabels ?? false;
+
+            #region カスタマイズ: 要素のラベルを任意に指定可能にする
+
+            // _showElementLabels = settings?.ShowElementLabels ?? false;
+            _showElementLabels = true;
+
+            #endregion
+
             _reorderableListGui = new ReorderableList(null, _property.ArrayElementType)
             {
                 draggable = settings?.Draggable ?? true,
@@ -451,25 +459,42 @@ namespace TriInspector.Elements
         private class ListPropertyOverrideContext : TriPropertyOverrideContext
         {
             public static readonly ListPropertyOverrideContext Instance = new ListPropertyOverrideContext();
-            
+
             private readonly GUIContent _noneLabel = GUIContent.none;
 
             public override bool TryGetDisplayName(TriProperty property, out GUIContent displayName)
             {
-                var showLabels = property.TryGetAttribute(out ListDrawerSettingsAttribute settings) &&
-                                 settings.ShowElementLabels;
+                #region カスタマイズ: 要素のラベルを任意に指定可能にする
 
-                if (!showLabels)
+                // var showLabels = property.TryGetAttribute(out ListDrawerSettingsAttribute settings) &&
+                //                  settings.ShowElementLabels;
+                //
+                // if (!showLabels)
+                // {
+                //     displayName = _noneLabel;
+                //     return true;
+                // }
+
+                if (property.TryGetAttribute(out ListDrawerSettingsAttribute settings) &&
+                    !string.IsNullOrEmpty(settings.ElementLabelMethod))
                 {
-                    displayName = _noneLabel;
-                    return true;
+                    var elementLabelResolver = ValueResolver.Resolve<string, int>(
+                        property.Definition, settings.ElementLabelMethod, property.IndexInArray);
+                    var label = elementLabelResolver.GetValue(property, property.IndexInArray);
+                    if (!string.IsNullOrEmpty(label))
+                    {
+                        displayName = new GUIContent(label);
+                        return true;
+                    }
                 }
 
-                displayName = default;
+                #endregion
+
+                displayName = _noneLabel;
                 return false;
             }
         }
- 
+
         private static class Styles
         {
             public static readonly GUIStyle ItemsCount;
