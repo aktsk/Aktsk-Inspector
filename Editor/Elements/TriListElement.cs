@@ -294,10 +294,41 @@ namespace TriInspector.Elements
         private void DrawHeaderCallback(Rect rect)
         {
             var labelRect = new Rect(rect);
+
+            #region カスタマイズ: 要素数を変更するためのフィールドを描画
+
             var arraySizeRect = new Rect(rect)
             {
-                xMin = rect.xMax - 100,
+                // xMin = rect.xMax - 100,
+                xMin = rect.xMax - 40,
+                xMax = rect.xMax - 4
             };
+
+            using (var changeCheckScope = new EditorGUI.ChangeCheckScope())
+            {
+                var arraySize = EditorGUI.IntField(arraySizeRect, GUIContent.none, _reorderableListGui.count);
+                if (changeCheckScope.changed)
+                {
+                    // Add
+                    if (arraySize > _reorderableListGui.count)
+                    {
+                        for (var i = _reorderableListGui.count; i < arraySize; ++i)
+                        {
+                            AddElementCallback(_reorderableListGui);
+                        }
+                    }
+                    // Remove
+                    else if (arraySize < _reorderableListGui.count)
+                    {
+                        for (var i = _reorderableListGui.count; i > arraySize; --i)
+                        {
+                            RemoveElementCallback(_reorderableListGui);
+                        }
+                    }
+                }
+            }
+
+            #endregion
 
             if (_alwaysExpanded)
             {
@@ -308,8 +339,12 @@ namespace TriInspector.Elements
                 TriEditorGUI.Foldout(labelRect, _property);
             }
 
-            var label = _reorderableListGui.count == 0 ? "Empty" : $"{_reorderableListGui.count} items";
-            GUI.Label(arraySizeRect, label, Styles.ItemsCount);
+            #region カスタマイズ: 要素数はラベルとしては表示しない
+
+            // var label = _reorderableListGui.count == 0 ? "Empty" : $"{_reorderableListGui.count} items";
+            // GUI.Label(arraySizeRect, label, Styles.ItemsCount);
+
+            #endregion
 
             if (Event.current.type == EventType.DragUpdated && rect.Contains(Event.current.mousePosition))
             {
