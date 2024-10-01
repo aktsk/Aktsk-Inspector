@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using TriInspector.Resolvers;
 using TriInspectorUnityInternalBridge;
@@ -21,6 +22,14 @@ namespace TriInspector.Elements
         private readonly bool _alwaysExpanded;
         private readonly bool _showElementLabels;
 
+        #region カスタマイズ: テーブル対応
+
+        private readonly bool _table;
+        private readonly TriPropertyOverrideContext _tableListPropertyOverrideContext;
+        private float[] _columnWidths;
+
+        #endregion
+
         private float _lastContentWidth;
 
         protected ReorderableList ListGui => _reorderableListGui;
@@ -36,6 +45,16 @@ namespace TriInspector.Elements
 
             // _showElementLabels = settings?.ShowElementLabels ?? false;
             _showElementLabels = true;
+
+            #endregion
+
+            #region カスタマイズ: テーブル対応
+
+            _table = settings != null && settings.Table;
+            if (_table)
+            {
+                _tableListPropertyOverrideContext = new TableListPropertyOverrideContext(_property);
+            }
 
             #endregion
 
@@ -81,6 +100,18 @@ namespace TriInspector.Elements
             {
                 _property.IsExpanded = true;
             }
+
+            #region カスタマイズ: テーブル対応
+
+            _reorderableListGui.headerHeight = _table
+                ? _property.IsExpanded
+                    ? _reorderableListGui.count == 0
+                        ? 20
+                        : 32
+                    : 18
+                : 20;
+
+            #endregion
 
             if (_property.IsExpanded)
             {
@@ -293,6 +324,15 @@ namespace TriInspector.Elements
 
         protected virtual TriElement CreateItemElement(TriProperty property)
         {
+            #region カスタマイズ: テーブル対応
+
+            if (_table)
+            {
+                return new TableRowElement(property);
+            }
+
+            #endregion
+
             return new TriPropertyElement(property, new TriPropertyElement.Props
             {
                 forceInline = !_showElementLabels,
@@ -303,9 +343,15 @@ namespace TriInspector.Elements
         {
             var labelRect = new Rect(rect);
 
+            #region カスタマイズ: テーブル対応
+
+            labelRect.height = 18;
+
+            #endregion
+
             #region カスタマイズ: 要素数を変更するためのフィールドを描画
 
-            var arraySizeRect = new Rect(rect)
+            var arraySizeRect = new Rect(labelRect)
             {
                 // xMin = rect.xMax - 100,
                 xMin = rect.xMax - 40,
@@ -376,7 +422,149 @@ namespace TriInspector.Elements
 
                 Event.current.Use();
             }
+
+            #region カスタマイズ: テーブル対応
+
+            if (_table)
+            {
+                if (Event.current.type == EventType.Repaint)
+                {
+                    var backgroundRect = new Rect
+                    {
+                        xMin = rect.xMin - 6,
+                        xMax = rect.xMax + 6,
+                        yMin = rect.yMin + 19,
+                        yMax = rect.yMax + 3,
+                    };
+                    ReorderableList.defaultBehaviours.boxBackground.Draw(backgroundRect, false, false, false, false);
+                }
+
+                if (ChildrenCount != 0)
+                {
+                    var cellElements = ((TableRowElement) (GetChild(0))).Elements;
+                    var headersRect = new Rect(rect)
+                    {
+                        xMin = rect.xMin + 15,
+                        y = rect.y + 20,
+                        height = 12,
+                        xMax = rect.xMax - 1,
+                    };
+
+                    // 幅の割合を維持したまま headersRect.width に合わせる
+                    var totalWidth = _columnWidths.Sum();
+                    if (totalWidth > 0)
+                    {
+                        for (var i = 0; i < _columnWidths.Length; i++)
+                        {
+                            _columnWidths[i] = _columnWidths[i] * headersRect.width / totalWidth;
+                        }
+                    }
+                    else
+                    {
+                        var defaultColumnWidth = headersRect.width / cellElements.Count;
+                        for (var i = 0; i < _columnWidths.Length; i++)
+                        {
+                            _columnWidths[i] = defaultColumnWidth;
+                        }
+                    }
+
+                    var left = headersRect.x;
+                    for (var i = 0; i < cellElements.Count; i++)
+                    {
+                        var cellContent = cellElements[i].Value;
+                        var cellRect = new Rect(headersRect)
+                        {
+                            x = left,
+                            width = _columnWidths[i],
+                        };
+                        left += cellRect.width;
+
+                        EditorGUI.LabelField(cellRect, cellContent, EditorStyles.centeredGreyMiniLabel);
+
+                        // 境界線
+                        if (i < cellElements.Count - 1)
+                        {
+                            var color = new Color(1, 1, 1, 0.1f);
+                            var delta = DrawDragLine(cellRect.xMax, cellRect.y, cellRect.height, color);
+                            if (delta != 0)
+                            {
+                                var minWidth = 20;
+                                if (_columnWidths[i] + delta < minWidth)
+                                {
+                                    delta = minWidth - _columnWidths[i];
+                                }
+                                else if (_columnWidths[i + 1] - delta < minWidth)
+                                {
+                                    delta = _columnWidths[i + 1] - minWidth;
+                                }
+
+                                _columnWidths[i] += delta;
+                                _columnWidths[i + 1] -= delta;
+                            }
+                        }
+                    }
+                }
+            }
+
+            #endregion
         }
+
+        #region カスタマイズ: テーブル対応
+
+        private static float DrawDragLine(float x, float y, float height, Color color)
+        {
+            var lineRect = new Rect(x - 1, y, 1, height);
+            EditorGUI.DrawRect(lineRect, color);
+
+            var draggableRect = new Rect(lineRect)
+            {
+                xMin = lineRect.xMin - 5,
+                xMax = lineRect.xMax + 5,
+            };
+            EditorGUIUtility.AddCursorRect(draggableRect, MouseCursor.ResizeHorizontal);
+
+            // ドラッグ検出して移動量を返す
+            var e = Event.current;
+            var id = GUIUtility.GetControlID(FocusType.Passive);
+            switch (e.GetTypeForControl(id))
+            {
+                case EventType.MouseDown:
+                {
+                    if (draggableRect.Contains(e.mousePosition))
+                    {
+                        GUIUtility.hotControl = id;
+                        e.Use();
+                    }
+
+                    break;
+                }
+                case EventType.MouseDrag:
+                {
+                    if (GUIUtility.hotControl == id)
+                    {
+                        var delta = e.delta.x;
+                        e.Use();
+                        return delta;
+                    }
+
+                    break;
+                }
+                case EventType.MouseUp:
+                {
+                    if (GUIUtility.hotControl == id)
+                    {
+                        GUIUtility.hotControl = 0;
+                        e.Use();
+                    }
+
+                    break;
+                }
+            }
+
+            return 0f;
+        }
+
+        #endregion
 
         private void DrawElementCallback(Rect rect, int index, bool isActive, bool isFocused)
         {
@@ -396,6 +584,47 @@ namespace TriInspector.Elements
 
             #endregion
 
+            #region カスタマイズ: テーブル対応
+
+            if (_table)
+            {
+                var indexRect = new Rect(rect)
+                {
+                    x = rect.x - 19,
+                    width = 19,
+                    yMin = rect.y - 1,
+                };
+                EditorGUI.LabelField(indexRect, index.ToString(), Styles.ElementIndex);
+
+                using (TriPropertyOverrideContext.BeginOverride(_tableListPropertyOverrideContext))
+                {
+                    var rowElement = (TableRowElement) (GetChild(index));
+                    var cellElements = rowElement.Elements;
+                    var left = rect.x;
+                    for (var i = 0; i < cellElements.Count; i++)
+                    {
+                        var cellElement = cellElements[i].Key;
+                        var width = _columnWidths[i];
+                        var cellRect = new Rect(rect)
+                        {
+                            height = cellElement.GetHeight(width),
+                            x = left,
+                            width = width - 2,
+                        };
+                        left += width;
+
+                        using (TriGuiHelper.PushLabelWidth(EditorGUIUtility.labelWidth / rowElement.ChildrenCount))
+                        {
+                            cellElement.OnGUI(cellRect);
+                        }
+                    }
+                }
+
+                return;
+            }
+
+            #endregion
+
             using (TriPropertyOverrideContext.BeginOverride(ListPropertyOverrideContext.Instance))
             {
                 GetChild(index).OnGUI(rect);
@@ -404,6 +633,37 @@ namespace TriInspector.Elements
 
         private float ElementHeightCallback(int index)
         {
+            #region カスタマイズ: テーブル対応
+
+            if (_table && index < ChildrenCount)
+            {
+                var height = 0f;
+                var rowElement = (TableRowElement) GetChild(index);
+                var cellElements = rowElement.Elements;
+
+                if (_columnWidths == null)
+                {
+                    _columnWidths = new float[cellElements.Count];
+                    var defaultColumnWidth = _lastContentWidth / cellElements.Count;
+                    for (var i = 0; i < _columnWidths.Length; i++)
+                    {
+                        _columnWidths[i] = defaultColumnWidth;
+                    }
+                }
+
+                for (var i = 0; i < cellElements.Count; i++)
+                {
+                    var cellElement = cellElements[i];
+                    var cellWidth = _columnWidths[i] - 2;
+                    var cellHeight = cellElement.Key.GetHeight(cellWidth);
+                    height = Math.Max(height, cellHeight);
+                }
+
+                return height;
+            }
+
+            #endregion
+
             if (index >= ChildrenCount)
             {
                 return EditorGUIUtility.singleLineHeight;
@@ -499,6 +759,12 @@ namespace TriInspector.Elements
         {
             public static readonly GUIStyle ItemsCount;
 
+            #region カスタマイズ: テーブル対応
+
+            public static readonly GUIStyle ElementIndex;
+
+            #endregion
+
             static Styles()
             {
                 ItemsCount = new GUIStyle(GUI.skin.label)
@@ -511,7 +777,91 @@ namespace TriInspector.Elements
                             : new Color(0.3f, 0.3f, 0.3f),
                     },
                 };
+
+                #region カスタマイズ: テーブル対応
+
+                ElementIndex = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 9,
+                };
+
+                #endregion
             }
         }
+
+        #region カスタマイズ: テーブル対応
+
+        private class TableRowElement : TriPropertyCollectionBaseElement
+        {
+            public TableRowElement(TriProperty property)
+            {
+                DeclareGroups(property.ValueType);
+
+                Elements = new List<KeyValuePair<TriElement, GUIContent>>();
+
+                if (property.PropertyType == TriPropertyType.Generic)
+                {
+                    foreach (var childProperty in property.ChildrenProperties)
+                    {
+                        var oldChildrenCount = ChildrenCount;
+
+                        var props = new TriPropertyElement.Props
+                        {
+                            forceInline = true,
+                        };
+                        AddProperty(childProperty, props, out var group);
+
+                        if (oldChildrenCount != ChildrenCount)
+                        {
+                            var element = GetChild(ChildrenCount - 1);
+                            var headerContent = new GUIContent(group ?? childProperty.DisplayName);
+
+                            Elements.Add(new KeyValuePair<TriElement, GUIContent>(element, headerContent));
+                        }
+                    }
+                }
+                else
+                {
+                    var element = new TriPropertyElement(property, new TriPropertyElement.Props
+                    {
+                        forceInline = true,
+                    });
+                    var headerContent = new GUIContent("Element");
+
+                    AddChild(element);
+                    Elements.Add(new KeyValuePair<TriElement, GUIContent>(element, headerContent));
+                }
+            }
+
+            public List<KeyValuePair<TriElement, GUIContent>> Elements { get; }
+        }
+
+        private class TableListPropertyOverrideContext : TriPropertyOverrideContext
+        {
+            private readonly TriProperty _grandParentProperty;
+            private readonly GUIContent _noneLabel = GUIContent.none;
+
+            public TableListPropertyOverrideContext(TriProperty grandParentProperty)
+            {
+                _grandParentProperty = grandParentProperty;
+            }
+
+            public override bool TryGetDisplayName(TriProperty property, out GUIContent displayName)
+            {
+                if (property.PropertyType == TriPropertyType.Primitive &&
+                    property.Parent?.Parent == _grandParentProperty &&
+                    !property.TryGetAttribute(out GroupAttribute _))
+                {
+                    displayName = _noneLabel;
+                    return true;
+                }
+
+                displayName = default;
+                return false;
+            }
+        }
+
+        #endregion
     }
 }

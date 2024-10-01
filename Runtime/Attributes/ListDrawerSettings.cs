@@ -18,5 +18,11 @@ namespace TriInspector
         public string ElementLabelMethod { get; set; }
 
         #endregion
+
+        #region カスタマイズ: テーブル対応
+
+        public bool Table { get; set; }
+
+        #endregion
     }
 }

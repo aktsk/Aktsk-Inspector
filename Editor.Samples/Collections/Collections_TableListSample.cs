@@ -5,10 +5,20 @@ using UnityEngine;
 
 public class Collections_TableListSample : ScriptableObject
 {
-    [TableList(Draggable = true,
+    #region カスタマイズ: ListDrawerSettings側でのテーブル対応
+
+    // [TableList(Draggable = true,
+    //     HideAddButton = false,
+    //     HideRemoveButton = false,
+    //     AlwaysExpanded = false)]
+    [ListDrawerSettings(Draggable = true,
         HideAddButton = false,
         HideRemoveButton = false,
-        AlwaysExpanded = false)]
+        AlwaysExpanded = false,
+        Table = true)]
+
+    #endregion
+
     public List<TableItem> table;
 
     [Serializable]

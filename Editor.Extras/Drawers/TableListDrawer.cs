@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FALSE // カスタマイズ: ListDrawerSettings側でのテーブル対応
+using System;
 using System.Collections.Generic;
 using TriInspector;
 using TriInspector.Drawers;
@@ -434,3 +435,4 @@ namespace TriInspector.Drawers
         }
     }
 }
+#endif
