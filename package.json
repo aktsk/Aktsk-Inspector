@@ -2,7 +2,7 @@
   "name": "com.aktsk.aktskinspector",
   "displayName": "Aktsk Inspector",
   "description": "Tri Inspectorのアカツキカスタム",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "unity": "2020.3",
   "author": "yuyu (https://github.com/yuyu0127)",
   "homepage": "https://github.com/aktsk/Aktsk-Inspector#readme",

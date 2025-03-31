@@ -123,7 +123,7 @@ namespace TriInspector.Editors
                 }
 
                 var clamped = Mathf.Clamp(labelWidth, 1, container.resolvedStyle.width - space);
-                if (clamped != labelWidth)
+                if (clamped != labelWidth && clamped > 0)
                 {
                     TriSessionState.LabelWidth = clamped;
                     labelWidth = clamped;
