@@ -430,7 +430,6 @@ namespace TriInspector.Elements
             {
                 xMax = rect.xMax - 50,
             };
-            var arraySizeRect = new Rect(rect)
             var labelRect = new Rect(rect);
 
             #region カスタマイズ: テーブル対応
